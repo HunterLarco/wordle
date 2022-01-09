@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/HunterLarco/wordle/issues"
   },
-  "homepage": "https://github.com/HunterLarco/wordle#readme"
+  "homepage": "https://github.com/HunterLarco/wordle#readme",
+  "dependencies": {
+    "inquirer": "^8.2.0"
+  }
 }
