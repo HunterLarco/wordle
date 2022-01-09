@@ -1,6 +1,6 @@
-const inquirer = require("inquirer");
+const inquirer = require('inquirer');
 
-const dictionary = require("./dictionary.trie.json");
+const dictionary = require('./dictionary.trie.json');
 
 function pruneHelper(trie, word, predicate) {
   for (const [letter, node] of Object.entries(trie.children)) {
@@ -18,7 +18,7 @@ function pruneHelper(trie, word, predicate) {
 }
 
 function prune(node, predicate) {
-  pruneHelper(node, "", predicate);
+  pruneHelper(node, '', predicate);
 }
 
 function getAnswer(trie) {
@@ -29,7 +29,7 @@ function getAnswer(trie) {
 }
 
 function getWords(trie, prefix) {
-  prefix = prefix || "";
+  prefix = prefix || '';
 
   let words = [];
 
@@ -49,24 +49,24 @@ async function main() {
 
   for (let j = 0; j < 6; ++j) {
     const { guess } = await inquirer.prompt({
-      type: "input",
-      name: "guess",
-      message: "What word did you guess?",
+      type: 'input',
+      name: 'guess',
+      message: 'What word did you guess?',
       validate: (results) => {
         if (!results.match(/^[a-z]{5}$/)) {
-          return "Invalid entry.";
+          return 'Invalid entry.';
         }
         return true;
       },
     });
 
     const { results } = await inquirer.prompt({
-      type: "input",
-      name: "results",
+      type: 'input',
+      name: 'results',
       message: `What are the results for "${guess}"?`,
       validate: (results) => {
         if (!results.match(/^(y|n|g){5}$/)) {
-          return "Invalid entry.";
+          return 'Invalid entry.';
         }
         return true;
       },
@@ -75,10 +75,10 @@ async function main() {
     for (let i = 0; i < results.length; ++i) {
       const result = results[i];
       switch (result) {
-        case "n":
+        case 'n':
           prune(dictionary, (node, letter, word) => letter == guess[i]);
           break;
-        case "y":
+        case 'y':
           prune(
             dictionary,
             (node, _, word) =>
@@ -86,7 +86,7 @@ async function main() {
               (word[i] == guess[i] || !new Set(word).has(guess[i]))
           );
           break;
-        case "g":
+        case 'g':
           prune(
             dictionary,
             (node, letter, word) => word.length == i + 1 && letter != guess[i]
@@ -101,7 +101,7 @@ async function main() {
       break;
     }
 
-    console.log(getWords(dictionary).join("\n"));
+    console.log(getWords(dictionary).join('\n'));
   }
 }
 
