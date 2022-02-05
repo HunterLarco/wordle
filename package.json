@@ -24,7 +24,8 @@
   "homepage": "https://github.com/HunterLarco/wordle#readme",
   "dependencies": {
     "deepcopy": "^2.1.0",
-    "inquirer": "^8.2.0"
+    "inquirer": "^8.2.0",
+    "random-choice": "^1.0.0"
   },
   "devDependencies": {
     "prettier": "2.5.1"
