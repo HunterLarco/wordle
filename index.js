@@ -1,5 +1,4 @@
 const inquirer = require('inquirer');
-const randomChoice = require('random-choice');
 
 const Dictionary = require('./dictionary.js');
 
@@ -12,46 +11,8 @@ function getAnswer(trie) {
   }
 }
 
-function createHistogram(words, excludes) {
-  const histogram = {};
-
-  for (const word of words) {
-    for (const letter of word) {
-      if (excludes.has(letter)) {
-        continue;
-      }
-      if (letter in histogram) {
-        ++histogram[letter];
-      } else {
-        histogram[letter] = 1;
-      }
-    }
-  }
-
-  for (const letter of Object.keys(histogram)) {
-    histogram[letter] /= words.length;
-  }
-
-  return histogram;
-}
-
 async function main() {
   solutionSpace.pruneWords(({ word }) => word.length != 5);
-
-  const words = [...solutionSpace.words()]
-  const excludes = new Set();
-  for (let i = 0; i < 5; ++i) {
-    const histogram = createHistogram(words, excludes); 
-    const letters = Object.entries(histogram);
-    letters.sort((a, b) => {
-      const a_dist = Math.abs(1/6 - a[1]);
-      const b_dist = Math.abs(1/6 - b[1]);
-      return a_dist < b_dist ? -1 : 1;
-    });
-    const letter = randomChoice(letters.slice(0, 3), [1, 1, 1])[0];
-    excludes.add(letter);
-    console.log(letter);
-  }
 
   for (let j = 0; j < 6; ++j) {
     const { guess } = await inquirer.prompt({
@@ -66,9 +27,9 @@ async function main() {
       },
     });
 
-    const { results } = await inquirer.prompt({
+    const { rawResults } = await inquirer.prompt({
       type: 'input',
-      name: 'results',
+      name: 'rawResults',
       message: `What are the results for "${guess}"?`,
       validate: (results) => {
         if (!results.match(/^(y|n|g){5}$/)) {
@@ -78,24 +39,81 @@ async function main() {
       },
     });
 
-    for (let i = 0; i < results.length; ++i) {
-      const result = results[i];
-      switch (result) {
+    const results = { y: [], n: [], g: [] };
+    for (let i = 0; i < rawResults.length; ++i) {
+      switch (rawResults[i]) {
         case 'n':
-          solutionSpace.pruneNodes(({ letter }) => letter == guess[i]);
+          results.n.push({ letter: guess[i], index: i });
           break;
         case 'y':
-          solutionSpace.pruneWords(
-            ({ word }) => word[i] == guess[i] || !new Set(word).has(guess[i])
-          );
+          results.y.push({ letter: guess[i], index: i });
           break;
         case 'g':
-          solutionSpace.pruneNodes(
-            ({ depth, letter }) => depth == i + 1 && letter != guess[i]
-          );
+          results.g.push({ letter: guess[i], index: i });
           break;
       }
     }
+
+    solutionSpace.pruneNodes((node) => {
+      // First check if this node represents a letter position that we already
+      // know the correct value for. If so, we can safely either prune when the
+      // node is incorrect, or preserve when the node is correct.
+      for (const { letter, index } of results.g) {
+        if (node.depth == index + 1) {
+          return node.letter != letter;
+        }
+      }
+
+      // Next, if this node represents a letter that is not contained in the
+      // solution, prune it.
+      //
+      // It's important that this check comes after the known correct checks.
+      // This way in a situation where a letter is used twice like in "SPOON" if
+      // the first "O" is green and the second, black, then we don't prune words
+      // with "O" as the 3rd letter.
+      for (const { letter, index } of results.n) {
+        if (node.letter == letter) {
+          return true;
+        }
+      }
+
+      // We then partially apply the yellow constraint: we prune any nodes where
+      // the yellow letter is positioned at a known incorrect position.
+      for (const { letter, index } of results.y) {
+        if (node.depth == index + 1 && node.letter == letter) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    // We then finish the yellow constrain by removing entire words which don't
+    // contain enough of the known letters. This cannot be part of the
+    // `pruneNodes` call because it requires the entire word to fulfill the
+    // predicate, however, executing after `pruneNodes` reduces the search
+    // space.
+    const letterCounts = {};
+    for (const { letter } of results.y) {
+      letterCounts[letter] = (letterCounts[letter] || 0) + 1;
+    }
+    for (const { letter } of results.g) {
+      if (letterCounts[letter]) {
+        ++letterCounts[letter];
+      }
+    }
+    solutionSpace.pruneWords(({ word }) => {
+      const wordHistogram = {};
+      for (const letter of word) {
+        wordHistogram[letter] = (wordHistogram[letter] || 0) + 1;
+      }
+      for (const [letter, count] of Object.entries(letterCounts)) {
+        if (!wordHistogram[letter] || wordHistogram[letter] < count) {
+          return true;
+        }
+      }
+      return false;
+    });
 
     const answer = getAnswer();
     if (answer) {

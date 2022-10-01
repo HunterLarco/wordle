@@ -40,7 +40,7 @@ class ClassicWordleGame extends AbstractWordleGame {
       },
     });
 
-    const score = [...results].map(c => {
+    const score = [...results].map((c) => {
       switch (c) {
         case 'n':
           return LetterState.NotPresent;
@@ -86,7 +86,7 @@ class ClassicWordleGame extends AbstractWordleGame {
   onLose() {
     console.log('You lost!');
   }
-};
+}
 
 const game = new ClassicWordleGame();
 game.run();

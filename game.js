@@ -15,7 +15,7 @@ const LetterState = {
   },
 
   toEmojis(states) {
-    return states.map(s => LetterState.toEmoji(s)).join('');
+    return states.map((s) => LetterState.toEmoji(s)).join('');
   },
 };
 
@@ -24,7 +24,7 @@ class AbstractWordleGame {
     for (let i = 0; i < 6; ++i) {
       const word = await this.getGuess();
       const score = await this.scoreWord(word);
-      if (score.every(s => s == LetterState.Correct)) {
+      if (score.every((s) => s == LetterState.Correct)) {
         this.onWin(i + 1);
         return;
       }
@@ -48,7 +48,7 @@ class AbstractWordleGame {
   onLose() {
     throw Error('Not implemented');
   }
-};
+}
 
 module.exports = {
   LetterState,

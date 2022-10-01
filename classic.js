@@ -53,7 +53,7 @@ class ClassicWordleGame extends AbstractWordleGame {
     console.log('You lost!');
     console.log(`The answer was "${this.answer_}"`);
   }
-};
+}
 
 const game = new ClassicWordleGame();
 game.run();
