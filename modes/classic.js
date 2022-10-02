@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 
-const Dictionary = require('./dictionary.js');
-const { AbstractWordleGame, LetterState } = require('./game.js');
+const Dictionary = require('../dictionary.js');
+const { AbstractWordleGame, LetterState } = require('../game.js');
 
 class ClassicWordleGame extends AbstractWordleGame {
   constructor() {
