@@ -3,7 +3,7 @@ const inquirer = require('inquirer');
 const Dictionary = require('../dictionary.js');
 const { AbstractWordleGame, LetterState } = require('../game.js');
 
-class ClassicWordleGame extends AbstractWordleGame {
+module.exports = class ClassicWordleGame extends AbstractWordleGame {
   constructor() {
     super();
 
@@ -54,6 +54,3 @@ class ClassicWordleGame extends AbstractWordleGame {
     console.log(`The answer was "${this.answer_}"`);
   }
 }
-
-const game = new ClassicWordleGame();
-game.run();

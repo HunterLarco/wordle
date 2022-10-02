@@ -1,14 +1,13 @@
 const inquirer = require('inquirer');
 
-const Dictionary = require('../dictionary.js');
+const SolutionSpace = require('../solution_space.js');
 const { AbstractWordleGame, LetterState } = require('../game.js');
 
-class ClassicWordleGame extends AbstractWordleGame {
+module.exports = class SolverWordleGame extends AbstractWordleGame {
   constructor() {
     super();
 
-    this.solutionSpace_ = new Dictionary();
-    this.solutionSpace_.pruneWords(({ word }) => word.length != 5);
+    this.solutionSpace_ = new SolutionSpace();
   }
 
   async getGuess() {
@@ -51,32 +50,12 @@ class ClassicWordleGame extends AbstractWordleGame {
       }
     });
 
-    this.pruneSolutionSpace(guess, score);
-    return score;
-  }
-
-  pruneSolutionSpace(guess, score) {
-    for (let i = 0; i < guess.length; ++i) {
-      switch (score[i]) {
-        case LetterState.NotPresent:
-          this.solutionSpace_.pruneNodes(({ letter }) => letter == guess[i]);
-          break;
-        case LetterState.WrongLocation:
-          this.solutionSpace_.pruneWords(
-            ({ word }) => word[i] == guess[i] || !new Set(word).has(guess[i])
-          );
-          break;
-        case LetterState.Correct:
-          this.solutionSpace_.pruneNodes(
-            ({ depth, letter }) => depth == i + 1 && letter != guess[i]
-          );
-          break;
-      }
-    }
-
+    this.solutionSpace_.prune(guess, score);
     for (const word of this.solutionSpace_.words()) {
       console.log(word);
     }
+
+    return score;
   }
 
   onWin(guesses) {
@@ -87,6 +66,3 @@ class ClassicWordleGame extends AbstractWordleGame {
     console.log('You lost!');
   }
 }
-
-const game = new ClassicWordleGame();
-game.run();
