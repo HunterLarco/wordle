@@ -41,7 +41,7 @@ class AbstractWordleGame {
     throw Error('Not implemented');
   }
 
-  onWin() {
+  onWin(guesses) {
     throw Error('Not implemented');
   }
 
