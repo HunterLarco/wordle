@@ -65,4 +65,4 @@ module.exports = class SolverWordleGame extends AbstractWordleGame {
   onLose() {
     console.log('You lost!');
   }
-}
+};
