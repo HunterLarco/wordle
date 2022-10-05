@@ -1,18 +1,26 @@
 const inquirer = require('inquirer');
 
-async function createGame() {
+async function getGameMode() {
+  if (process.argv[2]) {
+    return process.argv[2];
+  }
+
   const { mode } = await inquirer.prompt({
     type: 'list',
     name: 'mode',
     message: 'What game mode would you like to play?',
     choices: ['Classic', 'Solver'],
   });
+  return mode;
+}
 
-  switch (mode) {
-    case 'Classic':
+async function createGame() {
+  const mode = await getGameMode();
+  switch (mode.toLowerCase()) {
+    case 'classic':
       const ClassicWordleGame = require('./modes/classic.js');
       return new ClassicWordleGame();
-    case 'Solver':
+    case 'solver':
       const SolverWordleGame = require('./modes/solver.js');
       return new SolverWordleGame();
   }
@@ -25,4 +33,6 @@ async function main() {
   game.run();
 }
 
-main();
+main().catch((error) => {
+  console.error(error);
+});
