@@ -4,7 +4,21 @@ const inquirer = require('inquirer');
 const Dictionary = require('../dictionary.js');
 const { AbstractWordleGame, LetterState } = require('../game.js');
 
-function formatKeyboard(excludedLetters) {
+function getKeyboardLetterColor(letter, letterScores) {
+  const scores = letterScores[letter.toLowerCase()];
+  if (scores) {
+    if (scores.has(LetterState.Correct)) {
+      return chalk.bold(chalk.green(letter));
+    } else if (scores.has(LetterState.WrongLocation)) {
+      return chalk.bold(chalk.yellow(letter));
+    } else if (scores.has(LetterState.NotPresent)) {
+      return chalk.dim(letter);
+    }
+  }
+  return letter;
+}
+
+function formatKeyboard(letterScores) {
   const keyboard = [
     { keys: 'QWERTYUIOP', offset: 0 },
     { keys: 'ASDFGHJKL', offset: 1 },
@@ -18,10 +32,7 @@ function formatKeyboard(excludedLetters) {
       string += ' ';
     }
     for (const key of keys) {
-      string +=
-        excludedLetters.has(key) || excludedLetters.has(key.toLowerCase())
-          ? chalk.dim(key)
-          : key;
+      string += getKeyboardLetterColor(key, letterScores);
       for (let i = 0; i < letterSpacing; ++i) {
         string += ' ';
       }
@@ -51,7 +62,7 @@ module.exports = class ClassicWordleGame extends AbstractWordleGame {
     const words = [...this.dictionary_.words()];
     this.answer_ = words[Math.floor(Math.random() * words.length)];
 
-    this.excludedLetters_ = new Set();
+    this.letterScores_ = {};
   }
 
   async getGuess() {
@@ -77,18 +88,23 @@ module.exports = class ClassicWordleGame extends AbstractWordleGame {
     const score = [];
     const remainingLetters = createHistogram(this.answer_);
     for (let i = 0; i < guess.length; ++i) {
-      if (guess[i] == this.answer_[i]) {
-        score.push(LetterState.Correct);
-        --remainingLetters[guess[i]];
-      } else if (remainingLetters[guess[i]] > 0) {
-        score.push(LetterState.WrongLocation);
-        --remainingLetters[guess[i]];
+      const letter = guess[i];
+      let letterScore;
+      if (letter == this.answer_[i]) {
+        letterScore = LetterState.Correct;
+        --remainingLetters[letter];
+      } else if (remainingLetters[letter] > 0) {
+        letterScore = LetterState.WrongLocation;
+        --remainingLetters[letter];
       } else {
-        score.push(LetterState.NotPresent);
-        if (this.answer_.indexOf(guess[i]) == -1) {
-          this.excludedLetters_.add(guess[i]);
-        }
+        letterScore = LetterState.NotPresent;
       }
+
+      score.push(letterScore);
+      if (!this.letterScores_[letter]) {
+        this.letterScores_[letter] = new Set();
+      }
+      this.letterScores_[letter].add(letterScore);
     }
 
     console.log();
@@ -96,7 +112,7 @@ module.exports = class ClassicWordleGame extends AbstractWordleGame {
     console.log('    ' + LetterState.toEmojis(score));
     console.log();
     console.log(chalk.bold('     Keyboard'));
-    console.log(formatKeyboard(this.excludedLetters_));
+    console.log(formatKeyboard(this.letterScores_));
     console.log();
 
     return score;
