@@ -2,6 +2,7 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 
 const Dictionary = require('../dictionary.js');
+const Scoring  = require('../scoring.js');
 const { AbstractWordleGame, LetterState } = require('../game.js');
 
 function getKeyboardLetterColor(letter, letterScores) {
@@ -85,26 +86,16 @@ module.exports = class ClassicWordleGame extends AbstractWordleGame {
   }
 
   async scoreWord(guess) {
-    const score = [];
-    const remainingLetters = createHistogram(this.answer_);
-    for (let i = 0; i < guess.length; ++i) {
-      const letter = guess[i];
-      let letterScore;
-      if (letter == this.answer_[i]) {
-        letterScore = LetterState.Correct;
-        --remainingLetters[letter];
-      } else if (remainingLetters[letter] > 0) {
-        letterScore = LetterState.WrongLocation;
-        --remainingLetters[letter];
-      } else {
-        letterScore = LetterState.NotPresent;
-      }
+    const score = Scoring.score({ guess, answer: this.answer_ });
 
-      score.push(letterScore);
-      if (!this.letterScores_[letter]) {
-        this.letterScores_[letter] = new Set();
+    for (let i = 0; i < score.length; ++i) {
+      const guessedLetter = guess[i];
+      const letterState = score[i];
+
+      if (!this.letterScores_[guessedLetter]) {
+        this.letterScores_[guessedLetter] = new Set();
       }
-      this.letterScores_[letter].add(letterScore);
+      this.letterScores_[guessedLetter].add(letterState);
     }
 
     console.log();
