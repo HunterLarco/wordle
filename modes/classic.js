@@ -44,10 +44,11 @@ module.exports = class ClassicWordleGame extends AbstractWordleGame {
   constructor() {
     super();
 
+    this.dictionary_ = new Dictionary();
+    this.dictionary_.pruneWords(({ word }) => word.length != 5);
+
     // Select a random 5-letter word.
-    const dictionary = new Dictionary();
-    dictionary.pruneWords(({ word }) => word.length != 5);
-    const words = [...dictionary.words()];
+    const words = [...this.dictionary_.words()];
     this.answer_ = words[Math.floor(Math.random() * words.length)];
 
     this.excludedLetters_ = new Set();
@@ -58,9 +59,12 @@ module.exports = class ClassicWordleGame extends AbstractWordleGame {
       type: 'input',
       name: 'guess',
       message: 'What word would you like to guess?',
-      validate: (results) => {
-        if (!results.match(/^[a-z]{5}$/)) {
+      validate: (guess) => {
+        if (!guess.match(/^[a-z]{5}$/)) {
           return 'Invalid entry.';
+        }
+        if (!this.dictionary_.hasWord(guess)) {
+          return 'Not a word.';
         }
         return true;
       },

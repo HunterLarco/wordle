@@ -53,6 +53,14 @@ module.exports = class Dictionary {
     pruneNodes(this._trie, '', predicate);
   }
 
+  hasWord(word) {
+    let node = this._trie;
+    for (let i = 0; node && i < word.length; ++i) {
+      node = node.children[word[i]];
+    }
+    return node && node.isEnd;
+  }
+
   *words() {
     for (const { node, word } of iterate(this._trie, '')) {
       if (node.isEnd) {
